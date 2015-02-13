@@ -1,0 +1,1 @@
+{"GoalStrategies": [{"Name":"explore strategy"},{"Name":"traverse strategy"}],"EventStrategies": [{"Name":"agent announce strategy"}],"RepairStrategies": [],"MessageHandlingStrategies": [{"Name":"message strategy"}],"SubStrategies": []}

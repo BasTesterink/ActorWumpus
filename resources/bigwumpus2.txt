@@ -1,0 +1,9 @@
+dimensions 9 9
+agent 0 0 0
+agent 0 8 1
+agent 8 0 2
+agent 8 8 3
+chest 0 0
+chest 0 8 1
+chest 8 0 2
+chest 8 8 3 

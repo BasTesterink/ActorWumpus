@@ -1,6 +1,7 @@
 package strategies;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import triggers.KnowledgeMessage;
 import triggers.TraverseGoal;
@@ -58,15 +59,13 @@ public class TraverseStrategy extends Strategy {
 		public boolean executeNextStep(AgentInstantiation agent){
 			setFinished(true);
 			WumpusContext context = (WumpusContext)((WumpusAgentInstantiation)agent).getContext();
-			ArrayList<Integer> plan = WumpusPathPlanner.planPath(context.getCell(goal.getX(), goal.getY())); 
-			if(plan.size()>0 && context.move(agent, plan.get(plan.size()-1))){
-				context.positionUpdate(agent);  
-				return true;
-			} else return false;
+			List<Integer> plan = WumpusPathPlanner.planPath(context.getCell(goal.getX(), goal.getY())); 
+			if(plan.size()>0) context.move(agent, plan.get(plan.size()-1));
+			return true;
 		}
 		
 		// For debugging
-		private String path(ArrayList<Integer> l){
+		private String path(List<Integer> l){
 			StringBuffer s = new StringBuffer();
 			for(int i : l){
 				switch(i){

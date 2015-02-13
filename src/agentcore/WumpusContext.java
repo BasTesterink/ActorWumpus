@@ -58,7 +58,7 @@ public class WumpusContext extends Context {
 		if(!world[x][y].canHavePit()) return false;
 		return false;
 	}
-	
+
 	/** Check for the wumpus. Returns true if there is one for certain or otherwise false (so false is also unknown). */
 	private boolean hasWumpus(int x, int y){
 		if(!inWorld(x, y)) return false;								// Location is ouside of the world
@@ -66,11 +66,11 @@ public class WumpusContext extends Context {
 		if(!world[x][y].canHaveWumpus()) return false;					// Already determined the wumpus cannot be here
 		if(foundWumpus && (x!= wumpusX || y!=wumpusY)) return false;	// Found the wumpus elsewhere
 		if(foundWumpus && (x== wumpusX && y==wumpusY)) return true;		// Found the wumpus here
-		
+
 		// Look at the neighboring cells and see whether (x,y) is the only viable spot for the wumpus.
-		ArrayList<GridCell> newIntersection;
-		ArrayList<GridCell> intersection = new ArrayList<GridCell>();
-		ArrayList<GridCell> candidates = new ArrayList<GridCell>();
+		List<GridCell> newIntersection;
+		List<GridCell> intersection = new ArrayList<GridCell>();
+		List<GridCell> candidates = new ArrayList<GridCell>();
 		boolean first = true;
 		// The wumpus' location is known if either 2 adjacent stenches are smelled, or there is a stench s.t. (x,y) is the only candidate.
 		for(int[] d : delta){ //For each adjacent spot if there is a stench then we'll check what the candidate spots for the wumpus are.
@@ -103,16 +103,16 @@ public class WumpusContext extends Context {
 			wumpusY = y; 
 			return true;
 		}
-			
+
 		return false;
 	}
-	
+
 	// Some other literals
 	public boolean atLocation(int x, int y){ return me.getX()==x && me.getY()==y; }
 	public boolean isExplored(){ return explored; }
 	public boolean holdsGold(){ return me.holdsGold(); }
 	public boolean foundWumpus(){ return foundWumpus; }
-	
+
 	///////////////
 	/// Actions ///
 	///////////////
@@ -120,12 +120,15 @@ public class WumpusContext extends Context {
 	public void perceive(AgentInstantiation myInstantiation){
 		agentInterface.perceive(myInstantiation, perceptContainer); 
 		processPercept();
+		updateBelievedWorld(myInstantiation);
 		agentInterface.showBelief(world, me, others, myInstantiation);
 	}
 
 	/** Move up/down/left/right. */
 	public boolean move(AgentInstantiation myInstantiation, int direction){
-		return agentInterface.move(myInstantiation, direction);
+		boolean r = agentInterface.move(myInstantiation, direction);
+		updateBelievedWorld(myInstantiation);
+		return r;
 	}
 
 	/** Try to grab gold. */
@@ -140,7 +143,7 @@ public class WumpusContext extends Context {
 		if(toRemove!=null) goldSpots.remove(toRemove);
 		agentInterface.showBelief(world, me, others, myInstantiation);
 	}
-	
+
 	/** Drop gold. */
 	public void drop(AgentInstantiation myInstantiation){
 		me.setHoldsGold(!agentInterface.gripper(myInstantiation,true));
@@ -163,7 +166,7 @@ public class WumpusContext extends Context {
 				myInstantiation.getMessenger().sendMessage(myInstantiation.getID(), i, new KnowledgeMessage(wumpusX, wumpusY, true, true, false));
 		}
 	}
-	
+
 	/** Announce a spot that is visited (to let others know it's a safe spot. */ 
 	public void announceVisitedSpot(AgentInstantiation myInstantiation){
 		for(int i : otherAgentIDs){
@@ -175,9 +178,9 @@ public class WumpusContext extends Context {
 	////////////////////////////////
 	/// Aux. methods for actions ///
 	////////////////////////////////
-	
+
 	private boolean inWorld(int x, int y){ return x>=0 && x<world.length && y>=0 && y<world[0].length;}
-	
+
 	/** Update the belief base according to latest percept (through own perception or communication). */
 	private void processPercept(){
 		int x = perceptContainer.getX();
@@ -189,30 +192,18 @@ public class WumpusContext extends Context {
 		if(world[x][y].hasGold() && !goldSpots.contains(world[x][y])) goldSpots.add(world[x][y]);
 		world[x][y].setChest(perceptContainer.isChest());
 		if(world[x][y].hasChest() && !chestSpots.contains(world[x][y])) chestSpots.add(world[x][y]);
-		updateBelievedWorld();
-	}
-	
-	/** Get the current position in the environment and update internal map. */
-	public void positionUpdate(AgentInstantiation myInstantiation){
-		agentInterface.positionUpdate(myInstantiation, perceptContainer);
-		int x = perceptContainer.getX();  
-		int y = perceptContainer.getY();
-		me.setPosition(x,y); 
-		Dijkstra.dijkstra(arrayForm, world[me.getX()][me.getY()]); // Updates the distances from current position to all reachable spots	
-		agentInterface.showBelief(world, me, others, myInstantiation);
-	}
+	} 
 
 	/**
 	 * Updates the spots that are deemed safe.
 	 * Updates the connectivity between spots for path planning. 
 	 * Updates the distances from the agent to reachable spots.
 	 */
-	private void updateBelievedWorld(){
+	private void updateBelievedWorld(AgentInstantiation myInstantiation){
 		for(int x = 0; x < world.length; x++)
 			for(int y = 0; y < world[0].length; y++){
 				if(foundWumpus && !hasWumpus(x, y)) world[x][y].setCanHaveWumpus(false);
 				if(world[x][y].isVisited()){ 
-					connectToNeighbors(x, y);
 					if(!world[x][y].hasBreeze())
 						for(int[] d : delta)
 							if(inWorld(x+d[0],y+d[1])) world[x+d[0]][y+d[1]].setCanHavePit(false);
@@ -228,29 +219,37 @@ public class WumpusContext extends Context {
 				world[x][y].setSafe(!world[x][y].isVisited() && !world[x][y].canHavePit() && !world[x][y].canHaveWumpus()); // The visited check is to differentiate between unexplored and explored safe spots
 				if(world[x][y].isSafe()){ // If the node is found to be safe
 					safeSpots.add(world[x][y]);
-					connectToNeighbors(x, y);
 				}
 				world[x][y].setPit(hasPit(x,y)); 
 			}
+		updateConnectivityGraph();
+		agentInterface.positionUpdate(myInstantiation, perceptContainer);
+		int x = perceptContainer.getX();  
+		int y = perceptContainer.getY();
+		me.setPosition(x,y); 
+		Dijkstra.dijkstra(arrayForm, world[me.getX()][me.getY()]); // Updates the distances from current position to all reachable spots	
+		agentInterface.showBelief(world, me, others, myInstantiation);
 	} 
 
-	// Update internally the directly (one move) reachable spots from (x,y).
-	private void connectToNeighbors(int x, int y){
-		if(world[x][y].isSafe() || world[x][y].isVisited()){ // Must be possible to go to this spot
-			for(int[] d : delta){ // For each direction
-				if(inWorld(x+d[0],y+d[1])){ // If in the world
-					GridCell neighbor = world[x+d[0]][y+d[1]]; 
-					if(neighbor.isSafe()||neighbor.isVisited()){ // If the neighbor is traversable add it
-						if(!neighbor.getNeighbors().contains(world[x][y]))
-							neighbor.getNeighbors().add(world[x][y]); 
-						if(!world[x][y].getNeighbors().contains(neighbor))
-							world[x][y].getNeighbors().add(neighbor);
-					}
-				}
-			}
-		}
+	/** Update the connectivity graph for path planning. */
+	private void updateConnectivityGraph(){ 
+		for(int x = 0; x < world.length; x++)
+			for(int y = 0; y < world[0].length; y++)
+				if(world[x][y].isSafe()||world[x][y].isVisited())
+					for(int[] d : delta){ // For each direction
+						if(inWorld(x+d[0],y+d[1])){ // If in the world
+							GridCell neighbor = world[x+d[0]][y+d[1]]; 
+							if(neighbor.isSafe()||neighbor.isVisited()){ // If the neighbor is traversable add it
+								if(!neighbor.getNeighbors().contains(world[x][y]))
+									neighbor.getNeighbors().add(world[x][y]); 
+								if(!world[x][y].getNeighbors().contains(neighbor))
+									world[x][y].getNeighbors().add(neighbor);
+							}
+						}
+					} 
+		
 	}
-	
+
 	/** Set the believed wumpus location. Used after a wumpus announcement is received. */
 	public void setWumpus(AgentInstantiation myInstantiation, int x, int y){
 		foundWumpus = true;
@@ -258,18 +257,16 @@ public class WumpusContext extends Context {
 		wumpusY = y;
 		world[x][y].setCanHaveWumpus(true);
 		world[x][y].setWumpus(true);
-		updateBelievedWorld();	
-		positionUpdate(myInstantiation); // Recalculate distances
+		updateBelievedWorld(myInstantiation);
 	}
-	
+
 	/** Process information into the believed state. Used after an agent announce a safe spot and/or the wumpus. */
 	public void addInfo(AgentInstantiation myInstantiation, int x, int y, boolean canHaveWumpus, boolean canHavePit){
 		world[x][y].setCanHaveWumpus(canHaveWumpus);
 		world[x][y].setCanHavePit(canHavePit);
-		updateBelievedWorld();
-		positionUpdate(myInstantiation); // Recalculate distances
+		updateBelievedWorld(myInstantiation);
 	}
-	
+
 	////////////
 	/// Misc ///
 	////////////

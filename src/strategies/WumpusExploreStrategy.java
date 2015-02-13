@@ -57,7 +57,6 @@ public class WumpusExploreStrategy extends Strategy {
 					context.perceive(agent);
 					if(!b && context.foundWumpus()) context.announceWumpus(agent); // Just found the Wumpus
 					context.announceVisitedSpot(agent); // Announce that you safely visited a spot
-					context.positionUpdate(agent);
 				}
 				goalLocation = null;
 			} else {

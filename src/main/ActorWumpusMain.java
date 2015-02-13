@@ -84,5 +84,6 @@ public class ActorWumpusMain {
 		platform.instantiateAgent(WumpusConstants.VERSION1, args); 
 		platform.instantiateAgent(WumpusConstants.VERSION1, args);
 		platform.instantiateAgent(WumpusConstants.VERSION1, args);
+		//platform.instantiateAgent(WumpusConstants.VERSION1, args);
 	}
 }

@@ -24,8 +24,7 @@ public class InitialStrategy extends Strategy {
 		public boolean executeNextStep(AgentInstantiation agent){
 			WumpusAgentInstantiation w_agent = (WumpusAgentInstantiation)agent;
 			WumpusContext context = (WumpusContext)w_agent.getContext();
-			context.perceive(agent);
-			context.positionUpdate(agent);
+			context.perceive(agent); 
 			context.announceMyself(agent);
 			w_agent.adoptGoal(new ClearWorldGoal());
 			setFinished(true);

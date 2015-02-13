@@ -58,7 +58,7 @@ public class AgentInterface {
 			int dX = direction==WumpusConstants.LEFT?(-1):(direction==WumpusConstants.RIGHT?1:0);
 			int dY = direction==WumpusConstants.UP?1:(direction==WumpusConstants.DOWN?(-1):0);
 			env.move(agents.get(agent), dX, dY);
-			try{Thread.sleep(600);}catch(Exception e){}					// Allow the animation to finish
+			try{Thread.sleep(400);}catch(Exception e){}					// Allow the animation to finish
 			gui.updateRealWorld();
 			return env.getFailedMessage() == null;
 		}

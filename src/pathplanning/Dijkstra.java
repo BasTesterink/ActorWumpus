@@ -1,7 +1,7 @@
 package pathplanning;
  
 import java.util.List;
-import java.util.PriorityQueue;
+import java.util.PriorityQueue; 
 /**
  * A standard Dijkstra implementation.
  * @author Bas Testerink
@@ -17,12 +17,12 @@ public class Dijkstra {
 	 * @param source
 	 */
 	public static void dijkstra(List<Vertex> vertices, Vertex source){
-		PriorityQueue<Vertex> queue = new PriorityQueue<Vertex>();
-		queue.offer(source);
 		for(Vertex v : vertices) v.reInit();
 		source.setDistance(0);
+		PriorityQueue<Vertex> queue = new PriorityQueue<Vertex>();
+		queue.offer(source); 
 		
-		while(!queue.isEmpty()){
+		while(!queue.isEmpty()){ 
 			Vertex next = queue.poll();
 			next.setScanned(true);
 			
@@ -38,6 +38,5 @@ public class Dijkstra {
 				}
 			}
 		}
-	}
-	
+	} 
 }

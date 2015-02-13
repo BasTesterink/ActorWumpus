@@ -12,7 +12,7 @@ import pathplanning.Vertex;
 
 public class WumpusPathPlanner { 
 	/** Returns the moves to get to a goal. */
-	public static ArrayList<Integer> planPath(Vertex goal){
+	public static List<Integer> planPath(Vertex goal){
 		ArrayList<Integer> plan = new ArrayList<Integer>();
 		if(goal.getDistance() > 0 && goal.getDistance() < Integer.MAX_VALUE){
 			Vertex to = goal; 
